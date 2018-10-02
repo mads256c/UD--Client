@@ -35,6 +35,7 @@
 
   "permissions": [
     "https://uddataplus.dk/besked/*",
+    "http://localhost/*",
     "tabs",
     "activeTab",
     "storage"

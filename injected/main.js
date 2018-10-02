@@ -11,6 +11,8 @@ const conf =
 {
     console.log("UD- starting");
 
+    document.documentElement.addEventListener('commentsget', onCommentsGet, false);
+
     let conversationId = 0;
 
     setInterval(function() {
@@ -25,7 +27,6 @@ const conf =
 })();
 
 
-
 function onConversationChange(conversationId)
 {
     console.log("Conversation change: " + conversationId);
@@ -36,6 +37,9 @@ function onConversationChange(conversationId)
 
 function removeComments()
 {
+    let event = new CustomEvent('cancelrequest');
+    document.documentElement.dispatchEvent(event);
+
     let comments = document.getElementById("ud--commentsection");
     if (comments !== undefined && comments !== null)
         comments.remove();
@@ -43,9 +47,18 @@ function removeComments()
 
 function createComments(conversationId)
 {
+    let event = new CustomEvent('sendrequest', { detail: conversationId });
+
+    document.documentElement.dispatchEvent(event);
+}
+
+function onCommentsGet(e)
+{
     let comments = document.createElement("div");
     comments.id = "ud--commentsection";
-    comments.innerText = "This is a test. Please ignore! :)";
+    comments.innerText = e.detail;
+
+
 
     document.getElementsByClassName(conf.commentClass)[0].parentElement.appendChild(comments);
 }

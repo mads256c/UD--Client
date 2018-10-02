@@ -13,4 +13,33 @@
     let s = document.createElement("script");
     s.src = chrome.extension.getURL("injected/main.js"); //Set the src to our code.
     (document.head || document.documentElement).appendChild(s); //Add the element to the document.
+
+    document.documentElement.addEventListener('cancelrequest', onCancelRequest, false);
+    document.documentElement.addEventListener('sendrequest', onSendRequest, false);
+
 })();
+
+let getRequest;
+function onCancelRequest()
+{
+    if (getRequest !== undefined && getRequest !== null)
+    {
+        getRequest.abort();
+    }
+}
+
+function onSendRequest(e)
+{
+    console.log("Test: " + e.detail);
+
+    getRequest = new XMLHttpRequest();
+    getRequest.onreadystatechange = function(){
+        if (this.readyState === 4 && this.status === 200){
+            let event = new CustomEvent('commentsget', {detail: this.responseText});
+            document.documentElement.dispatchEvent(event);
+        }
+    };
+
+    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=" + e.detail, true);
+    getRequest.send();
+}
