@@ -4,7 +4,7 @@ const conf =
     activeConversationClass: "IWI4RYB-d-r IWI4RYB-d-G IWI4RYB-d-O IWI4RYB-d-f IWI4RYB-b-c IWI4RYB-b-l IWI4RYB-d-k IWI4RYB-b-k",
     updateRate: 100,
 
-    commentClass: "always-visible IWI4RYB-b-s ps-container ps-active-y",
+    commentClass: "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-b-e do-select IWI4RYB-d-t",
 
     commentChainWrapperClass: "IWI4RYB-d-r IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-d-N",
 
@@ -58,9 +58,15 @@ function removeComments()
     let event = new CustomEvent('cancelrequest');
     document.documentElement.dispatchEvent(event);
 
+    let title = document.getElementById("ud--commenttitle");
+    if (title !== undefined && title !== null) {
+        title.remove();
+    }
+
     let comments = document.getElementById("ud--commentsection");
-    if (comments !== undefined && comments !== null)
+    if (comments !== undefined && comments !== null) {
         comments.remove();
+    }
 }
 
 function createComments(conversationId)
@@ -72,6 +78,10 @@ function createComments(conversationId)
 
 function onCommentsGet(e)
 {
+    let title = document.createElement("h3");
+    title.id = "ud--commenttitle";
+    title.innerText = "UD- kommentarfelt";
+
     let comments = document.createElement("div");
     comments.className = conf.commentChainWrapperClass;
     comments.id = "ud--commentsection";
@@ -133,5 +143,8 @@ function onCommentsGet(e)
 
 
 
-    document.getElementsByClassName(conf.commentClass)[0].parentElement.appendChild(comments);
+    let commentDoc = document.getElementsByClassName(conf.commentClass)[0];
+    commentDoc.appendChild(title);
+    commentDoc.appendChild(comments);
+
 }
