@@ -31,6 +31,20 @@ const conf =
 
     document.documentElement.addEventListener('commentsget', onCommentsGet, false);
 
+    //Halves original comments size. HACK!
+    setInterval(function(){
+        let v = document.getElementsByClassName("IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r")[0].nextSibling;
+
+        if (v.childNodes.length === 0){
+            v.style = "flex: 0 1 auto; height: 50px;"; //Does not work :/ TODO: find a way
+        }
+        else {
+            v.style = "flex: 0 1 auto; height: 200px;";
+        }
+
+
+    }, 100);
+
     let conversationId = 0;
 
     setInterval(function() {
@@ -141,6 +155,7 @@ function onCommentsGet(e)
         comments.appendChild(commentWrapper);
     });
 
+    document.getElementsByClassName("IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r")[0].nextSibling.style = "flex: 0 1 auto; height: 200px;";
 
 
     let commentDoc = document.getElementsByClassName(conf.commentClass)[0];
