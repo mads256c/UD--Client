@@ -1,0 +1,42 @@
+{
+  "name": "UD-",
+  "description" : "A secondary comment system for the UDDATA+ platform",
+  "version": "0.1",
+  "manifest_version": 2,
+
+  "browser_action": {
+    "default_title": "UD-",
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [{
+    "js": ["injector.js"],
+    "matches": ["https://uddataplus.dk/besked/*", "https://www.uddataplus.dk/besked/*"],
+    "run_at": "document_idle"
+  }],
+
+  "icons": {
+    "16": "images/ud-16.png",
+    "32": "images/ud-32.png",
+    "48": "images/ud-48.png",
+    "64": "images/ud-64.png",
+    "128": "images/ud-128.png"
+  },
+
+  "options_ui": {
+    "page": "popup.html",
+    "chrome_style": true
+  },
+
+  "web_accessible_resources": [
+    "injected/main.js",
+    "injected/main.css"
+  ],
+
+  "permissions": [
+    "https://uddataplus.dk/besked/*",
+    "tabs",
+    "activeTab",
+    "storage"
+  ]
+}
