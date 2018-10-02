@@ -40,6 +40,6 @@ function onSendRequest(e)
         }
     };
 
-    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=" + e.detail, true);
+    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=0", true);
     getRequest.send();
 }
