@@ -44,7 +44,9 @@ const conf =
             if (v !== undefined && v !== null) {
                 if (height !== parseFloat(v.style.height.replace("px", ""))) {
                     height = parseFloat(v.style.height.replace("px", "")) / 3;
-
+                    if (height < 100) {
+                        height = 100;
+                    }
                     v.style.height = height + "px";
                 }
             }
