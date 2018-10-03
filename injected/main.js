@@ -6,9 +6,9 @@ const conf =
 
     commentClass: "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-b-e do-select IWI4RYB-d-t",
 
-    commentChainWrapperClass: "IWI4RYB-d-r IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-d-N",
+    commentChainWrapperClass: "",
 
-    commentWrapperClass: "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-b-p IWI4RYB-d-t",
+    commentWrapperClass: "commentmargin",
 
     commentNameClass: "gwt-InlineHTML IWI4RYB-b-b IWI4RYB-b-o green",
 
@@ -31,17 +31,18 @@ const conf =
 
     document.documentElement.addEventListener('commentsget', onCommentsGet, false);
 
+    let height = 0;
     //Halves original comments size. HACK!
     setInterval(function(){
         let v = document.getElementsByClassName("IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r")[0].nextSibling;
 
-        if (v.childNodes.length === 0){
-            v.style = "flex: 0 1 auto; height: 50px;"; //Does not work :/ TODO: find a way
-        }
-        else {
-            v.style = "flex: 0 1 auto; height: 200px;";
-        }
+            if (v !== undefined && v !== null) {
+                if (height !== parseFloat(v.style.height.replace("px", ""))) {
+                    height = parseFloat(v.style.height.replace("px", "")) / 3;
 
+                    v.style.height = height + "px";
+                }
+            }
 
     }, 100);
 
@@ -133,12 +134,12 @@ function onCommentsGet(e)
 
                 let commentReply = document.createElement("div");
                 commentReply.className = conf.commentReplyClass;
-                commentReply.style = conf.uddataMagicStyle;
+                commentReply.style = "display: inline-block;";
                 commentReply.innerText = "Svar";
 
                 let commentTimeWrapper = document.createElement("div");
                 commentTimeWrapper.className = conf.commentTimeWrapperClass;
-                commentTimeWrapper.style = conf.uddataMagicStyle;
+                commentTimeWrapper.style = "display: inline-block;";
 
                     let commentTime = document.createElement("div");
                     commentTime.className = conf.commentTimeClass;
@@ -154,8 +155,6 @@ function onCommentsGet(e)
 
         comments.appendChild(commentWrapper);
     });
-
-    document.getElementsByClassName("IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r")[0].nextSibling.style = "flex: 0 1 auto; height: 200px;";
 
 
     let commentDoc = document.getElementsByClassName(conf.commentClass)[0];
