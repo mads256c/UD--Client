@@ -22,6 +22,8 @@ const conf =
 
     commentTimeClass: "gwt-HTML",
 
+    commentInputClass: "gwt-TextArea IWI4RYB-q-c input-block-level",
+
     uddataMagicStyle: "flex: 0 1 auto;"
 };
 //Function that runs itself. It makes sure that we don't pollute the namespace with our variables.
@@ -29,7 +31,10 @@ const conf =
 {
     console.log("UD- starting");
 
-    document.documentElement.addEventListener('commentsget', onCommentsGet, false);
+    document.documentElement.addEventListener("commentsget", onCommentsGet, false);
+    document.documentElement.addEventListener("commentreply", onCommentReply, false);
+    document.documentElement.addEventListener("commentsreload", onCommentsReload, false);
+
 
     let height = 0;
     //Halves original comments size. HACK!
@@ -59,10 +64,13 @@ const conf =
     }, conf.updateRate);
 })();
 
+let currentConversation;
 
 function onConversationChange(conversationId)
 {
     console.log("Conversation change: " + conversationId);
+
+    currentConversation = conversationId;
 
     removeComments();
     createComments(conversationId);
@@ -81,6 +89,11 @@ function removeComments()
     let comments = document.getElementById("ud--commentsection");
     if (comments !== undefined && comments !== null) {
         comments.remove();
+    }
+
+    let commentInput = document.getElementById("ud--commentinput");
+    if (commentInput !== undefined && commentInput !== null) {
+        commentInput.remove();
     }
 }
 
@@ -104,7 +117,13 @@ function onCommentsGet(e)
 
     let json = JSON.parse(e.detail);
 
+    let commentsArray = {};
+
+    let conversationId;
+
     json.forEach(function(obj) {
+        conversationId = obj.ConversationId
+
         let commentWrapper = document.createElement("div");
         //commentWrapper.innerText = "ID: " + obj.Id + " Name: " + obj.Name + " Time:" + obj.Time + " Text: " + obj.Text;
         commentWrapper.className = conf.commentWrapperClass;
@@ -132,10 +151,16 @@ function onCommentsGet(e)
             commentReplyTimeWrapper.className = conf.commentReplyTimeWrapperClass;
             commentReplyTimeWrapper.style = conf.uddataMagicStyle;
 
+
+
                 let commentReply = document.createElement("div");
                 commentReply.className = conf.commentReplyClass;
                 commentReply.style = "display: inline-block;";
                 commentReply.innerText = "Svar";
+
+                let commentReplyEvent = new CustomEvent('commentreply', {detail: {conversationId: obj.ConversationId, commentId: obj.Id, commentDiv: commentWrapper}});
+                commentReply.onclick = function(a, b){
+                document.documentElement.dispatchEvent(commentReplyEvent)};
 
                 let commentTimeWrapper = document.createElement("div");
                 commentTimeWrapper.className = conf.commentTimeWrapperClass;
@@ -153,12 +178,113 @@ function onCommentsGet(e)
             commentWrapper.appendChild(commentNameTextWrapper);
             commentWrapper.appendChild(commentReplyTimeWrapper);
 
-        comments.appendChild(commentWrapper);
+
+        commentsArray[obj.Id] = commentWrapper;
+
+
+        if (obj.ReplyTo === null) {
+            comments.appendChild(commentWrapper);
+        }
+        else{
+            commentWrapper.style.paddingLeft = "10px";
+            commentsArray[obj.ReplyTo].appendChild(commentWrapper);
+        }
+
     });
 
+
+    let commentInput = createCommentInput();
+    commentInput.addEventListener('keydown', function(event){
+
+        //Auto size
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+
+        //Comment send
+        if (event.code === "Enter" || event.code === "NumpadEnter")
+        {
+            event.preventDefault();
+            let commentSendEvent = new CustomEvent("commentsend", {detail: {conversationId: currentConversation, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
+
+            document.documentElement.dispatchEvent(commentSendEvent);
+        }
+    });
 
     let commentDoc = document.getElementsByClassName(conf.commentClass)[0];
     commentDoc.appendChild(title);
     commentDoc.appendChild(comments);
+    commentDoc.appendChild(commentInput);
 
+
+
+}
+
+function onCommentReply(e)
+{
+    let conversationId = e.detail.conversationId;
+    let commentId = e.detail.commentId;
+    let commentDiv = e.detail.commentDiv;
+
+    removeCommentInput();
+
+    let textarea = createCommentReplyInput();
+    textarea.addEventListener('keydown', function(event){
+
+        //Auto size
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+
+        //Comment send
+        if (event.code === "Enter" || event.code === "NumpadEnter")
+        {
+            event.preventDefault();
+            let commentSendEvent = new CustomEvent("commentsend", {detail: {conversationId: conversationId, replyId: commentId, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
+
+            document.documentElement.dispatchEvent(commentSendEvent);
+
+            this.remove();
+        }
+    });
+
+    commentDiv.appendChild(textarea);
+
+    //alert("This feature does not work yet\n");
+}
+
+function removeCommentInput()
+{
+    let textarea = document.getElementById("ud--commentreplyinput");
+    if (textarea !== undefined && textarea !== null)
+    {
+        textarea.remove();
+    }
+}
+
+function createCommentReplyInput()
+{
+    let textarea = document.createElement("textarea");
+    textarea.id = "ud--commentreplyinput";
+    textarea.className = conf.commentInputClass;
+    textarea.rows = 1;
+    textarea.maxLength = 5000;
+    textarea.placeholder = "Skriv en UD- kommentar ...";
+
+    return textarea;
+}
+
+function onCommentsReload(e)
+{
+    onConversationChange(e.detail);
+}
+
+function createCommentInput()
+{
+    let textarea = document.createElement("textarea");
+    textarea.id = "ud--commentinput";
+    textarea.className = conf.commentInputClass;
+    textarea.rows = 1;
+    textarea.maxLength = 5000;
+    textarea.placeholder = "Skriv en UD- kommentar ...";
+
+    return textarea;
 }

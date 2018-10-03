@@ -16,21 +16,29 @@
 
     document.documentElement.addEventListener('cancelrequest', onCancelRequest, false);
     document.documentElement.addEventListener('sendrequest', onSendRequest, false);
+    document.documentElement.addEventListener("commentsend", onCommentSend, false);
 
 })();
 
 let getRequest;
+let postRequest;
 function onCancelRequest()
 {
     if (getRequest !== undefined && getRequest !== null)
     {
         getRequest.abort();
     }
+
+    if (postRequest !== undefined && postRequest !== null)
+    {
+        postRequest.abort();
+    }
 }
 
 function onSendRequest(e)
 {
-    console.log("Test: " + e.detail);
+    let conversationId = e.detail;
+    console.log("Test: " + conversationId);
 
     getRequest = new XMLHttpRequest();
     getRequest.onreadystatechange = function(){
@@ -40,6 +48,40 @@ function onSendRequest(e)
         }
     };
 
-    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=0", true);
+    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=" + conversationId, true);
     getRequest.send();
 }
+
+function onCommentSend(e)
+{
+    console.log(e);
+
+    console.log(objectToFormData(e.detail));
+
+    postRequest = new XMLHttpRequest();
+    postRequest.onreadystatechange = function(){
+        if (this.readyState === 4 && this.status === 200){
+            let event = new CustomEvent('commentsreload', {detail: e.detail.conversationId});
+            document.documentElement.dispatchEvent(event);
+        }
+    };
+
+    postRequest.open("POST", "http://localhost/UD--Server/postcomment.php", true);
+    postRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    postRequest.send(objectToFormData(e.detail));
+}
+
+function objectToFormData(obj) {
+
+    let string = "";
+
+    for(let property in obj) {
+        if(obj.hasOwnProperty(property)) {
+            string += property + "=" + obj[property] + "&";
+        }
+    }
+
+    return string.substring(0, string.length-1);
+}
+
+
