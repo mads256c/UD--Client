@@ -1,9 +1,18 @@
 //This javascript code injects "injected/main.js" into the top javascript context.
 //This is needed because normally we only have access to our own things, but we need access to the whole html document.
 
+const production = false;
+
+const prodUrl = "https://odiom.net/UD--Server/";
+const localUrl = "http://localhost/UD--Server/";
+
+let url;
+
 //Function that runs itself. It makes sure that we don't pollute the namespace with our variables.
 (function()
 {
+    url = production ? prodUrl : localUrl;
+
     let c = document.createElement("link");
     c.rel = "stylesheet";
     c.href = chrome.extension.getURL("injected/main.css");
@@ -48,7 +57,7 @@ function onSendRequest(e)
         }
     };
 
-    getRequest.open("GET", "http://localhost/UD--Server/getcomments.php?conversationId=" + conversationId, true);
+    getRequest.open("GET", url + "getcomments.php?conversationId=" + conversationId, true);
     getRequest.send();
 }
 
@@ -66,7 +75,7 @@ function onCommentSend(e)
         }
     };
 
-    postRequest.open("POST", "http://localhost/UD--Server/postcomment.php", true);
+    postRequest.open("POST", url + "postcomment.php", true);
     postRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     postRequest.send(objectToFormData(e.detail));
 }

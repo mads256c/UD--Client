@@ -1,7 +1,7 @@
 {
   "name": "UD-",
   "description" : "A secondary comment system for the UDDATA+ platform",
-  "version": "0.1",
+  "version": "0.4",
   "manifest_version": 2,
 
   "browser_action": {
@@ -35,7 +35,8 @@
 
   "permissions": [
     "https://uddataplus.dk/besked/*",
-    "http://localhost/*",
+    "https://odiom.net/UD--Server/*",
+    "http://localhost/UD--Server/*",
     "tabs",
     "activeTab",
     "storage"
