@@ -149,7 +149,7 @@ function onCommentsGet(e)
 
                 let previousImgTag = 0;
 
-                let imageWrapper = document.createElement("div");
+                let contentWrapper = document.createElement("div");
 
                 while (obj.Text.includes("[IMG](", previousImgTag))
                 {
@@ -184,14 +184,51 @@ function onCommentsGet(e)
 
                         imageLink.appendChild(image);
 
-                        imageWrapper.appendChild(imageLink);
+                        contentWrapper.appendChild(imageLink);
 
                         commentText.innerText = commentText.innerText.replace("[IMG](" + url + ")", "");
                     }
 
                 }
 
-                commentText.append(imageWrapper);
+        let previousVidTag = 0;
+
+        while (obj.Text.includes("[VID](", previousVidTag))
+        {
+            previousVidTag = obj.Text.indexOf("[VID](", previousVidTag) + 6;
+            let substr = obj.Text.substring(previousVidTag);
+            let url = "";
+            for (let i = 0; i < substr.length; i++) {
+
+                if (substr[i] === ")")
+                {
+                    break;
+                }
+
+                if (i === substr.length - 1)
+                {
+                    url = "";
+                    break;
+                }
+
+                url += substr[i];
+            }
+
+            if (url !== "")
+            {
+                let video = document.createElement("video");
+                video.src = url;
+                video.className = "ud--commentvideo";
+                video.controls = true;
+
+                contentWrapper.appendChild(video);
+
+                commentText.innerText = commentText.innerText.replace("[VID](" + url + ")", "");
+            }
+
+        }
+
+                commentText.append(contentWrapper);
 
 
 
@@ -267,7 +304,7 @@ function onCommentsGet(e)
     commentDoc.appendChild(title);
     commentDoc.appendChild(comments);
     commentDoc.appendChild(commentInput);
-    commentDoc.appendChild(createCommentInsertImage(commentInput, false));
+    commentDoc.appendChild(createCommentHelp(commentInput, false));
 
 
 
@@ -301,7 +338,7 @@ function onCommentReply(e)
     });
 
     commentDiv.appendChild(textarea);
-    commentDiv.appendChild(createCommentInsertImage(textarea, true));
+    commentDiv.appendChild(createCommentHelp(textarea, true));
 
     //alert("This feature does not work yet\n");
 }
@@ -350,20 +387,37 @@ function createCommentInput()
     return textarea;
 }
 
-function createCommentInsertImage(commentInput, isReply)
+function createCommentHelp(commentInput, isReply)
 {
-    let help = document.createElement("a");
-    help.innerText = "Indsæt billede";
-    //help.href = "#";
+    let helpWrapper = document.createElement("div");
     if (isReply){
-        help.id = "ud--commentreplyhelp";
+        helpWrapper.id = "ud--commentreplyhelp";
     }
     else{
-        help.id = "ud--commenthelp";
+        helpWrapper.id = "ud--commenthelp";
     }
-    help.addEventListener('click', function(e){
+    let insertImageHelp = document.createElement("a");
+    insertImageHelp.innerText = "Indsæt billede";
+
+    insertImageHelp.addEventListener('click', function(e){
         commentInput.value += "[IMG](<Indsæt billed url her>)";
     },false);
 
-    return help;
+    let spacer = document.createElement("span");
+    spacer.innerText = "•";
+    spacer.style.marginLeft = "5px";
+    spacer.style.marginRight = "5px";
+
+    let insertVideoHelp = document.createElement("a");
+    insertVideoHelp.innerText = "Indsæt video";
+
+    insertVideoHelp.addEventListener('click', function(e){
+        commentInput.value += "[VID](<Indsæt video url her>)";
+    },false);
+
+    helpWrapper.appendChild(insertImageHelp);
+    helpWrapper.appendChild(spacer);
+    helpWrapper.appendChild(insertVideoHelp);
+
+    return helpWrapper;
 }

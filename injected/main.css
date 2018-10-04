@@ -24,5 +24,11 @@ body {
 .ud--commentimage {
     max-width: 25%;
     max-height: 10em;
-    display: block;
+    display: inline-block;
+}
+
+.ud--commentvideo {
+    max-width: 25%;
+    max-height: 10em;
+    display: inline-block;
 }
