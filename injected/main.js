@@ -157,14 +157,15 @@ function onCommentsGet(e)
                     let substr = obj.Text.substring(previousImgTag);
                     let url = "";
                     for (let i = 0; i < substr.length; i++) {
-                        if (i === substr.length - 1)
-                        {
-                            url = "";
-                            break;
-                        }
 
                         if (substr[i] === ")")
                         {
+                            break;
+                        }
+
+                        if (i === substr.length - 1)
+                        {
+                            url = "";
                             break;
                         }
 

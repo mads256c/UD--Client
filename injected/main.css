@@ -23,5 +23,6 @@ body {
 
 .ud--commentimage {
     max-width: 25%;
+    max-height: 10em;
     display: block;
 }
