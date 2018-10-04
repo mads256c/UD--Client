@@ -222,6 +222,7 @@ function onCommentsGet(e)
                     video.src = url.replace("youtube.com/", "youtube.com/embed/").replace("watch?v=", "");
                     video.frameBorder = "0";
                     video.allowFullscreen = true;
+                    video.className = "ud--commentvideo";
                 }
                 else {
                     video = document.createElement("video");
