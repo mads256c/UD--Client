@@ -97,6 +97,11 @@ function removeComments()
     if (commentInput !== undefined && commentInput !== null) {
         commentInput.remove();
     }
+
+    let commentHelp = document.getElementById("ud--commenthelp");
+    if (commentHelp !== undefined && commentHelp !== null) {
+        commentHelp.remove();
+    }
 }
 
 function createComments(conversationId)
@@ -121,10 +126,8 @@ function onCommentsGet(e)
 
     let commentsArray = {};
 
-    let conversationId;
 
     json.forEach(function(obj) {
-        conversationId = obj.ConversationId
 
         let commentWrapper = document.createElement("div");
         //commentWrapper.innerText = "ID: " + obj.Id + " Name: " + obj.Name + " Time:" + obj.Time + " Text: " + obj.Text;
@@ -143,6 +146,53 @@ function onCommentsGet(e)
                 let commentText = document.createElement("div");
                 commentText.className = conf.commentTextClass;
                 commentText.innerText = obj.Text;
+
+                let previousImgTag = 0;
+
+                let imageWrapper = document.createElement("div");
+
+                while (obj.Text.includes("[IMG](", previousImgTag))
+                {
+                    previousImgTag = obj.Text.indexOf("[IMG](", previousImgTag) + 6;
+                    let substr = obj.Text.substring(previousImgTag);
+                    let url = "";
+                    for (let i = 0; i < substr.length; i++) {
+                        if (i === substr.length - 1)
+                        {
+                            url = "";
+                            break;
+                        }
+
+                        if (substr[i] === ")")
+                        {
+                            break;
+                        }
+
+                        url += substr[i];
+                    }
+
+                    if (url !== "")
+                    {
+                        let imageLink = document.createElement("a");
+                        imageLink.href = url;
+                        imageLink.target = "_blank";
+
+                        let image = document.createElement("img");
+                        image.src = url;
+                        image.className = "ud--commentimage";
+
+                        imageLink.appendChild(image);
+
+                        imageWrapper.appendChild(imageLink);
+
+                        commentText.innerText = commentText.innerText.replace("[IMG](" + url + ")", "");
+                    }
+
+                }
+
+                commentText.append(imageWrapper);
+
+
 
                 commentNameTextWrapper.appendChild(commentName);
                 commentNameTextWrapper.appendChild(commentText);
@@ -216,6 +266,7 @@ function onCommentsGet(e)
     commentDoc.appendChild(title);
     commentDoc.appendChild(comments);
     commentDoc.appendChild(commentInput);
+    commentDoc.appendChild(createCommentInsertImage(commentInput, false));
 
 
 
@@ -249,6 +300,7 @@ function onCommentReply(e)
     });
 
     commentDiv.appendChild(textarea);
+    commentDiv.appendChild(createCommentInsertImage(textarea, true));
 
     //alert("This feature does not work yet\n");
 }
@@ -259,6 +311,12 @@ function removeCommentInput()
     if (textarea !== undefined && textarea !== null)
     {
         textarea.remove();
+    }
+
+    let help = document.getElementById("ud--commentreplyhelp");
+    if (help !== undefined && help !== null)
+    {
+        help.remove();
     }
 }
 
@@ -289,4 +347,22 @@ function createCommentInput()
     textarea.placeholder = "Skriv en UD- kommentar ...";
 
     return textarea;
+}
+
+function createCommentInsertImage(commentInput, isReply)
+{
+    let help = document.createElement("a");
+    help.innerText = "Indsæt billede";
+    //help.href = "#";
+    if (isReply){
+        help.id = "ud--commentreplyhelp";
+    }
+    else{
+        help.id = "ud--commenthelp";
+    }
+    help.addEventListener('click', function(e){
+        commentInput.value += "[IMG](<Indsæt billed url her>)";
+    },false);
+
+    return help;
 }
