@@ -37,7 +37,6 @@
     "https://uddataplus.dk/besked/*",
     "https://odiom.net/UD--Server/*",
     "http://localhost/UD--Server/*",
-    "tabs",
     "activeTab",
     "storage"
   ]
