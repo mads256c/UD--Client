@@ -216,12 +216,22 @@ function onCommentsGet(e)
 
             if (url !== "")
             {
-                let video = document.createElement("video");
-                video.src = url;
-                video.className = "ud--commentvideo";
-                video.controls = true;
+                let video;
+                if (url.includes("youtube.com")){
+                    video = document.createElement("iframe");
+                    video.src = url.replace("youtube.com/", "youtube.com/embed/").replace("watch?v=", "");
+                    video.frameBorder = "0";
+                    video.allowFullscreen = true;
+                }
+                else {
+                    video = document.createElement("video");
+                    video.src = url;
+                    video.className = "ud--commentvideo";
+                    video.controls = true;
+                }
 
-                contentWrapper.appendChild(video);
+                    contentWrapper.appendChild(video);
+
 
                 commentText.innerText = commentText.innerText.replace("[VID](" + url + ")", "");
             }
