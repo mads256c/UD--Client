@@ -143,6 +143,45 @@ function onCommentsGet(e)
                 commentName.className = conf.commentNameClass;
                 commentName.innerText = obj.Name;
 
+                let commentUserInfoEvent = document.createElement("div");
+                commentUserInfoEvent.id = "ud--commentuserinfoevent";
+
+                let commentUserInfoName = document.createElement("span");
+                commentUserInfoName.innerText = obj.Name;
+                commentUserInfoName.className = "ud--userinfoname";
+
+                let commentUserInfoImage = document.createElement("img");
+                commentUserInfoImage.src = "https://www.uddataplus.dk/shared/brugerfoto?brug_id=" + obj.UserId.toString();
+                commentUserInfoImage.style.marginTop = "10px";
+                commentUserInfoImage.style.maxHeight = "100px";
+                commentUserInfoImage.style.maxWidth = "100px";
+                commentUserInfoImage.className = "ud--userinfoimage";
+
+
+                commentUserInfoEvent.appendChild(commentUserInfoName);
+                commentUserInfoEvent.appendChild(commentUserInfoImage);
+
+                commentName.addEventListener('mouseover', function(e) {
+                    commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
+                    commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
+                    document.body.appendChild(commentUserInfoEvent);
+
+                }, false);
+
+                commentName.addEventListener('mousemove', function(e) {
+                    commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
+                    commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
+                }, false)
+
+                commentName.addEventListener('mouseleave', function(e) {
+                    let d = document.getElementById("ud--commentuserinfoevent");
+
+                    if (d !== undefined && d !== null)
+                    {
+                        d.remove();
+                    }
+                    }, false);
+
                 let commentText = document.createElement("div");
                 commentText.className = conf.commentTextClass;
                 commentText.innerText = obj.Text;

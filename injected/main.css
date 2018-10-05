@@ -32,3 +32,24 @@ body {
     max-height: 10em;
     display: inline-block;
 }
+
+.ud--userinfoname {
+    display: block;
+    border-bottom: 1px solid blue;
+}
+
+#ud--commentuserinfoevent {
+    position: absolute;
+    background-color: white;
+    z-index: 100;
+    padding: 5px;
+
+    border: 1px solid black;
+}
+
+.ud--userinfoimage {
+    margin-top: 10px;
+    max-height: 100px;
+    max-width: 100px;
+    display: block;
+}
