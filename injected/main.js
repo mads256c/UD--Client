@@ -256,9 +256,9 @@ function onCommentsGet(e)
             if (url !== "")
             {
                 let video;
-                if (url.includes("youtube.com")){
+                if (url.replace("youtu.be/", "youtube.com/").includes("youtube.com")){
                     video = document.createElement("iframe");
-                    video.src = url.replace("youtube.com/", "youtube.com/embed/").replace("watch?v=", "");
+                    video.src = url.replace("youtu.be/", "youtube.com/").replace("/embed/", "/").replace("youtube.com/", "youtube.com/embed/").replace("watch?v=", "");
                     video.frameBorder = "0";
                     video.allowFullscreen = true;
                     video.className = "ud--commentvideo";
