@@ -31,9 +31,9 @@ const conf =
 {
     console.log("UD- starting");
 
-    document.documentElement.addEventListener("commentsget", onCommentsGet, false);
+    document.documentElement.addEventListener("commentsgotten", onCommentsGet, false);
     document.documentElement.addEventListener("commentreply", onCommentReply, false);
-    document.documentElement.addEventListener("commentsreload", onCommentsReload, false);
+    document.documentElement.addEventListener("reloadcomments", onCommentsReload, false);
     document.documentElement.addEventListener("messageshow", function(e) {showMessage(e.detail.title, e.detail.message, e.detail.progress)}, false);
     document.documentElement.addEventListener("messageremove", function(e) {removeMessage()}, false);
 
@@ -81,7 +81,7 @@ function onConversationChange(conversationId)
 
 function removeComments()
 {
-    let event = new CustomEvent('cancelrequest');
+    let event = new CustomEvent('abortcommentrequests');
     document.documentElement.dispatchEvent(event);
 
     let title = document.getElementById("ud--commenttitle");
@@ -107,7 +107,7 @@ function removeComments()
 
 function createComments(conversationId)
 {
-    let event = new CustomEvent('sendrequest', { detail: conversationId });
+    let event = new CustomEvent('getcomments', { detail: conversationId });
 
     document.documentElement.dispatchEvent(event);
 }
@@ -319,7 +319,7 @@ function onCommentsGet(e)
                     commentDelete.style = "display: inline-block; margin-left: 5px";
                     commentDelete.innerText = " Slet";
 
-                    let commentDeleteEvent = new CustomEvent('commentdelete', {detail: {conversationId: obj.ConversationId, userId: obj.UserId, id: obj.Id}});
+                    let commentDeleteEvent = new CustomEvent('deletecomment', {detail: {conversationId: obj.ConversationId, userId: obj.UserId, id: obj.Id}});
                     commentDelete.onclick = function(a, b) {
                         if (confirm("Er du sikker på at du vil slette denne kommentar?")) {
                             document.documentElement.dispatchEvent(commentDeleteEvent)
@@ -379,7 +379,7 @@ function onCommentsGet(e)
         if (event.code === "Enter" || event.code === "NumpadEnter")
         {
             event.preventDefault();
-            let commentSendEvent = new CustomEvent("commentsend", {detail: {conversationId: currentConversation, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
+            let commentSendEvent = new CustomEvent("sendcomment", {detail: {conversationId: currentConversation, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
 
             document.documentElement.dispatchEvent(commentSendEvent);
         }
@@ -414,7 +414,7 @@ function onCommentReply(e)
         if (event.code === "Enter" || event.code === "NumpadEnter")
         {
             event.preventDefault();
-            let commentSendEvent = new CustomEvent("commentsend", {detail: {conversationId: conversationId, replyId: commentId, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
+            let commentSendEvent = new CustomEvent("sendcomment", {detail: {conversationId: conversationId, replyId: commentId, name: uddata_bruger.fornavn + " " + uddata_bruger.efternavn, userId: uddata_bruger.brug_id, text: this.value}});
 
             document.documentElement.dispatchEvent(commentSendEvent);
 

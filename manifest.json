@@ -10,7 +10,7 @@
   },
 
   "content_scripts": [{
-    "js": ["injector.js"],
+    "js": ["extensionmain.js"],
     "matches": ["https://uddataplus.dk/besked/*", "https://www.uddataplus.dk/besked/*"],
     "run_at": "document_idle"
   }],
