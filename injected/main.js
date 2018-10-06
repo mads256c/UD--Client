@@ -34,7 +34,8 @@ const conf =
     document.documentElement.addEventListener("commentsget", onCommentsGet, false);
     document.documentElement.addEventListener("commentreply", onCommentReply, false);
     document.documentElement.addEventListener("commentsreload", onCommentsReload, false);
-
+    document.documentElement.addEventListener("messageshow", function(e) {showMessage(e.detail.title, e.detail.message, e.detail.progress)}, false);
+    document.documentElement.addEventListener("messageremove", function(e) {removeMessage()}, false);
 
     let height = 0;
     //Halves original comments size. HACK!
@@ -121,14 +122,20 @@ function onCommentsGet(e)
     comments.className = conf.commentChainWrapperClass;
     comments.id = "ud--commentsection";
     comments.style = conf.uddataMagicStyle;
+    let json;
+    try{
+         json = JSON.parse(e.detail);
+    }
+    catch(ex){
+        showMessage("Fejl!", e.detail);
+        return;
+    }
 
-    let json = JSON.parse(e.detail);
 
     let commentsArray = {};
 
 
     json.forEach(function(obj) {
-
         let commentWrapper = document.createElement("div");
         //commentWrapper.innerText = "ID: " + obj.Id + " Name: " + obj.Name + " Time:" + obj.Time + " Text: " + obj.Text;
         commentWrapper.className = conf.commentWrapperClass;
@@ -151,7 +158,7 @@ function onCommentsGet(e)
                 commentUserInfoName.className = "ud--userinfoname";
 
                 let commentUserInfoImage = document.createElement("img");
-                commentUserInfoImage.src = "https://www.uddataplus.dk/shared/brugerfoto?brug_id=" + obj.UserId.toString();
+                commentUserInfoImage.src = "https://www.uddataplus.dk/shared/brugerfoto?brug_id=" + obj.UserId;
                 commentUserInfoImage.style.marginTop = "10px";
                 commentUserInfoImage.style.maxHeight = "100px";
                 commentUserInfoImage.style.maxWidth = "100px";
@@ -161,26 +168,31 @@ function onCommentsGet(e)
                 commentUserInfoEvent.appendChild(commentUserInfoName);
                 commentUserInfoEvent.appendChild(commentUserInfoImage);
 
-                commentName.addEventListener('mouseover', function(e) {
-                    commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
-                    commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
-                    document.body.appendChild(commentUserInfoEvent);
+                if (obj.UserId !== "0")
+                {
+                    commentName.addEventListener('mouseover', function(e) {
+                        commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
+                        commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
+                        document.body.appendChild(commentUserInfoEvent);
 
-                }, false);
-
-                commentName.addEventListener('mousemove', function(e) {
-                    commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
-                    commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
-                }, false)
-
-                commentName.addEventListener('mouseleave', function(e) {
-                    let d = document.getElementById("ud--commentuserinfoevent");
-
-                    if (d !== undefined && d !== null)
-                    {
-                        d.remove();
-                    }
                     }, false);
+
+                    commentName.addEventListener('mousemove', function(e) {
+                        commentUserInfoEvent.style.left = (e.pageX - commentUserInfoEvent.clientWidth / 2).toString() + "px";
+                        commentUserInfoEvent.style.top = (e.pageY - commentUserInfoEvent.clientHeight - 20).toString() + "px";
+                    }, false);
+
+                    commentName.addEventListener('mouseleave', function(e) {
+                        let d = document.getElementById("ud--commentuserinfoevent");
+
+                        if (d !== undefined && d !== null)
+                        {
+                            d.remove();
+                        }
+                    }, false);
+                }
+
+
 
                 let commentText = document.createElement("div");
                 commentText.className = conf.commentTextClass;
@@ -302,6 +314,21 @@ function onCommentsGet(e)
                 commentReply.onclick = function(a, b){
                 document.documentElement.dispatchEvent(commentReplyEvent)};
 
+                let commentDelete = document.createElement("div");
+                    commentDelete.className = conf.commentReplyClass;
+                    commentDelete.style = "display: inline-block; margin-left: 5px";
+                    commentDelete.innerText = " Slet";
+
+                    let commentDeleteEvent = new CustomEvent('commentdelete', {detail: {conversationId: obj.ConversationId, userId: obj.UserId, id: obj.Id}});
+                    commentDelete.onclick = function(a, b) {
+                        if (confirm("Er du sikker på at du vil slette denne kommentar?")) {
+                            document.documentElement.dispatchEvent(commentDeleteEvent)
+                        }
+                    };
+
+
+
+
                 let commentTimeWrapper = document.createElement("div");
                 commentTimeWrapper.className = conf.commentTimeWrapperClass;
                 commentTimeWrapper.style = "display: inline-block;";
@@ -312,7 +339,15 @@ function onCommentsGet(e)
 
                     commentTimeWrapper.appendChild(commentTime);
 
-                commentReplyTimeWrapper.appendChild(commentReply);
+
+                if (obj.UserId !== "0"){
+                    commentReplyTimeWrapper.appendChild(commentReply);
+                }
+
+                if (obj.UserId === uddata_bruger.brug_id.toString()){
+                    commentReplyTimeWrapper.appendChild(commentDelete);
+                }
+
                 commentReplyTimeWrapper.appendChild(commentTimeWrapper);
 
             commentWrapper.appendChild(commentNameTextWrapper);
@@ -470,4 +505,87 @@ function createCommentHelp(commentInput, isReply)
     helpWrapper.appendChild(insertVideoHelp);
 
     return helpWrapper;
+}
+
+function showMessage(title, message, progress){
+    let modalBackground = document.getElementById("ud--modalboxbackground");
+
+    if (modalBackground !== null)
+    {
+        let modalBox = document.getElementById("ud--modalbox");
+        let modalTitle = document.getElementById("ud--modaltitle");
+        let modalContentWrapper = document.getElementById("ud--modalcontentwrapper");
+        let modalMessage = document.getElementById("ud--modalmessage");
+        let modalProgress = document.getElementById("ud--modalprogress");
+
+        modalTitle.innerText = title;
+        modalMessage.innerText = message;
+
+        if (progress !== undefined && progress !== null){
+            if (modalProgress === undefined || modalProgress === null){
+                modalProgress = document.createElement("progress");
+                modalProgress.id = "ud--modalprogress";
+                modalProgress.max = 100;
+                modalContentWrapper.appendChild(modalProgress);
+            }
+            if (progress !== Infinity) {
+                modalProgress.value = progress;
+            }
+        }
+        else {
+            if (modalProgress !== undefined && modalProgress !== null){
+                modalProgress.remove();
+            }
+        }
+
+    }
+    else
+    {
+        modalBackground = document.createElement("div");
+        modalBackground.id = "ud--modalboxbackground";
+        modalBackground.addEventListener("click", function(){this.remove()});
+
+            let modalBox = document.createElement("div");
+            modalBox.id = "ud--modalbox";
+
+
+                let modalTitle = document.createElement("h1");
+                modalTitle.id = "ud--modaltitle";
+                modalTitle.innerText = title;
+
+                let modalContentWrapper = document.createElement("div");
+                modalContentWrapper.id = "ud--modalcontentwrapper";
+
+                    let modalMessage = document.createElement("span");
+                    modalMessage.id = "ud--modalmessage";
+                    modalMessage.innerText = message;
+
+                    modalContentWrapper.appendChild(modalMessage);
+
+                    if (progress !== undefined && progress !== null){
+                        let modalProgress = document.createElement("progress");
+                        modalProgress.id = "ud--modalprogress";
+                        modalProgress.max = 100;
+
+                        if (progress !== Infinity) {
+                            modalProgress.value = progress;
+                        }
+                        modalContentWrapper.appendChild(modalProgress);
+                    }
+
+                modalBox.appendChild(modalTitle);
+                modalBox.appendChild(modalContentWrapper);
+
+            modalBackground.appendChild(modalBox);
+
+        document.body.appendChild(modalBackground);
+    }
+}
+
+function removeMessage(){
+    let modalBackground = document.getElementById("ud--modalboxbackground");
+
+    if (modalBackground !== null){
+        modalBackground.remove();
+    }
 }

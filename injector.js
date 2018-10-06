@@ -26,6 +26,7 @@ let url;
     document.documentElement.addEventListener('cancelrequest', onCancelRequest, false);
     document.documentElement.addEventListener('sendrequest', onSendRequest, false);
     document.documentElement.addEventListener("commentsend", onCommentSend, false);
+    document.documentElement.addEventListener("commentdelete", onCommentDelete, false);
 
 })();
 
@@ -50,12 +51,15 @@ function onSendRequest(e)
     console.log("Test: " + conversationId);
 
     getRequest = new XMLHttpRequest();
-    getRequest.onreadystatechange = function(){
-        if (this.readyState === 4 && this.status === 200){
-            let event = new CustomEvent('commentsget', {detail: this.responseText});
-            document.documentElement.dispatchEvent(event);
-        }
-    };
+    getRequest.addEventListener("load", function(){
+        let event = new CustomEvent('commentsget', {detail: getRequest.responseText});
+        document.documentElement.dispatchEvent(event);
+    });
+
+    getRequest.addEventListener("error", function(){
+        let event = new CustomEvent("messageshow", {detail: {title: "Fejl!", message: "Kunne ikke hente UD- kommentarer!\r\n" + getRequest.statusText}});
+        document.documentElement.dispatchEvent(event);
+    });
 
     getRequest.open("GET", url + "getcomments.php?conversationId=" + conversationId, true);
     getRequest.send();
@@ -63,19 +67,36 @@ function onSendRequest(e)
 
 function onCommentSend(e)
 {
-    console.log(e);
-
-    console.log(objectToFormData(e.detail));
-
     postRequest = new XMLHttpRequest();
-    postRequest.onreadystatechange = function(){
-        if (this.readyState === 4 && this.status === 200){
-            let event = new CustomEvent('commentsreload', {detail: e.detail.conversationId});
-            document.documentElement.dispatchEvent(event);
-        }
-    };
+    postRequest.addEventListener("load",function(){
+        let event = new CustomEvent('commentsreload', {detail: e.detail.conversationId});
+        document.documentElement.dispatchEvent(event);
+    });
+
+    postRequest.addEventListener("error", function(){
+        let event = new CustomEvent("messageshow", {detail: {title: "Fejl!", message: "Kunne ikke sende kommentaren"}});
+        document.documentElement.dispatchEvent(event);
+    });
 
     postRequest.open("POST", url + "postcomment.php", true);
+    postRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    postRequest.send(objectToFormData(e.detail));
+}
+
+function onCommentDelete(e)
+{
+    postRequest = new XMLHttpRequest();
+    postRequest.addEventListener("load",function(){
+        let event = new CustomEvent('commentsreload', {detail: e.detail.conversationId});
+        document.documentElement.dispatchEvent(event);
+    });
+
+    postRequest.addEventListener("error", function(){
+        let event = new CustomEvent("messageshow", {detail: {title: "Fejl!", message: "Kunne ikke slette kommentaren"}});
+        document.documentElement.dispatchEvent(event);
+    });
+
+    postRequest.open("POST", url + "deletecomment.php", true);
     postRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     postRequest.send(objectToFormData(e.detail));
 }
