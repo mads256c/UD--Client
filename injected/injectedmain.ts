@@ -88,7 +88,7 @@ namespace InjectedMain {
     }
 
     class Comments {
-        public static Initialize():void {
+        public static Initialize(): void {
             document.documentElement.addEventListener("commentsgotten", Comments.OnCommentsGotten, false);
         }
 
@@ -122,23 +122,42 @@ namespace InjectedMain {
             document.documentElement.dispatchEvent(getCommentsEvent);
         }
 
-        public static OnCommentsGotten(e:any){
-            let json:any = JSON.parse(e.detail);
+        public static OnCommentsGotten(e: any) {
+            let json: any = JSON.parse(e.detail);
 
-            let commentDoc:HTMLElement = document.getElementsByClassName(CssClassNames.CommentSection)[0];
+            let commentDoc: Element = document.getElementsByClassName(CssClassNames.CommentSection)[0];
+            let title: HTMLElement = document.createElement("h3");
+            title.id = CssIds.CommentTitle;
+            title.innerText = "UD- kommentarfelt";
 
-            let comments:HTMLElement = document.createElement("div");
-            comments.id = "ud--commentsection";
+            commentDoc.appendChild(title);
+
+            let comments: HTMLElement = document.createElement("div");
+            comments.id = CssIds.CommentSection;
 
             commentDoc.appendChild(comments);
 
-            json.forEach(function(comment:any){
-                comments.appendChild(new Comment(comment.Id, comment.ConversationId, comment.Name, comment.UserId, comment.Text, comment.Time).Build());
+            Comment.CommentsArray = [];
+
+            json.forEach(function (commentInfo: any) {
+                let replyTo: number | null = null;
+                if (commentInfo.ReplyTo !== null) {
+                    replyTo = parseInt(commentInfo.ReplyTo);
+                }
+
+                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, commentInfo.UserId, commentInfo.Text, commentInfo.Time, replyTo).Build();
+
+                if (comment !== null) {
+                    comments.appendChild(comment);
+                }
+
             });
         }
     }
 
     class Comment {
+
+        public static CommentsArray: Array<HTMLElement>;
 
         private readonly Id: number;
         private readonly ConversationId: number;
@@ -146,18 +165,20 @@ namespace InjectedMain {
         private readonly UserId: number;
         private Text: string;
         private readonly Time: string;
+        private readonly ReplyTo: number | null;
 
 
-        constructor(id: number, conversationId: number, name: string, userId: number, text: string, time: string) {
+        constructor(id: number, conversationId: number, name: string, userId: number, text: string, time: string, replyTo: number | null) {
             this.Id = id;
             this.ConversationId = conversationId;
             this.Name = name;
             this.UserId = userId;
             this.Text = text;
             this.Time = time;
+            this.ReplyTo = replyTo
         }
 
-        public Build(): HTMLElement {
+        public Build(): HTMLElement | null {
             let commentWrapper: HTMLElement = this.CreateCommentWrapper();
             let commentNameTextWrapper: HTMLElement = this.CreateCommentNameTextWrapper();
             let commentName: HTMLElement = this.CreateCommentName();
@@ -192,7 +213,19 @@ namespace InjectedMain {
             commentTimeWrapper.appendChild(commentTime);
 
 
-            return commentWrapper;
+            Comment.CommentsArray[this.Id] = commentWrapper;
+
+
+            if (this.ReplyTo === null) {
+                return commentWrapper;
+            }
+            else {
+                commentWrapper.style.paddingLeft = "10px";
+                if (Comment.CommentsArray[this.ReplyTo] !== undefined) {
+                    Comment.CommentsArray[this.ReplyTo].appendChild(commentWrapper);
+                }
+                return null;
+            }
         }
 
         private CreateCommentWrapper(): HTMLElement {

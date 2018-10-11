@@ -97,22 +97,35 @@ var InjectedMain;
         static OnCommentsGotten(e) {
             let json = JSON.parse(e.detail);
             let commentDoc = document.getElementsByClassName(CssClassNames.CommentSection)[0];
+            let title = document.createElement("h3");
+            title.id = CssIds.CommentTitle;
+            title.innerText = "UD- kommentarfelt";
+            commentDoc.appendChild(title);
             let comments = document.createElement("div");
-            comments.id = "ud--commentsection";
+            comments.id = CssIds.CommentSection;
             commentDoc.appendChild(comments);
-            json.forEach(function (comment) {
-                comments.appendChild(new Comment(comment.Id, comment.ConversationId, comment.Name, comment.UserId, comment.Text, comment.Time).Build());
+            Comment.CommentsArray = [];
+            json.forEach(function (commentInfo) {
+                let replyTo = null;
+                if (commentInfo.ReplyTo !== null) {
+                    replyTo = parseInt(commentInfo.ReplyTo);
+                }
+                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, commentInfo.UserId, commentInfo.Text, commentInfo.Time, replyTo).Build();
+                if (comment !== null) {
+                    comments.appendChild(comment);
+                }
             });
         }
     }
     class Comment {
-        constructor(id, conversationId, name, userId, text, time) {
+        constructor(id, conversationId, name, userId, text, time, replyTo) {
             this.Id = id;
             this.ConversationId = conversationId;
             this.Name = name;
             this.UserId = userId;
             this.Text = text;
             this.Time = time;
+            this.ReplyTo = replyTo;
         }
         Build() {
             let commentWrapper = this.CreateCommentWrapper();
@@ -143,7 +156,17 @@ var InjectedMain;
             }
             commentReplyDeleteTimeWrapper.appendChild(commentTimeWrapper);
             commentTimeWrapper.appendChild(commentTime);
-            return commentWrapper;
+            Comment.CommentsArray[this.Id] = commentWrapper;
+            if (this.ReplyTo === null) {
+                return commentWrapper;
+            }
+            else {
+                commentWrapper.style.paddingLeft = "10px";
+                if (Comment.CommentsArray[this.ReplyTo] !== undefined) {
+                    Comment.CommentsArray[this.ReplyTo].appendChild(commentWrapper);
+                }
+                return null;
+            }
         }
         CreateCommentWrapper() {
             let commentWrapper = document.createElement("div");
