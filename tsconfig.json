@@ -4,7 +4,11 @@
     "target": "es6",
     "sourceMap": true,
     "noImplicit": true,
-    "strict": true
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true
 
   },
   "exclude": [
