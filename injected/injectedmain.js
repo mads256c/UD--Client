@@ -66,6 +66,17 @@ var InjectedMain;
     }
     ConversationChangeObserver.UpdateRate = 100;
     ConversationChangeObserver.ConversationId = 0;
+    class CommentInfo {
+        constructor(id, conversationId, name, userId, text, time, replyTo) {
+            this.Id = id;
+            this.ConversationId = conversationId;
+            this.Name = name;
+            this.UserId = userId;
+            this.Text = text;
+            this.Time = time;
+            this.ReplyTo = replyTo;
+        }
+    }
     class Comments {
         static Initialize() {
             document.documentElement.addEventListener("commentsgotten", Comments.OnCommentsGotten, false);
@@ -95,7 +106,6 @@ var InjectedMain;
             document.documentElement.dispatchEvent(getCommentsEvent);
         }
         static OnCommentsGotten(e) {
-            let json = JSON.parse(e.detail);
             let commentDoc = document.getElementsByClassName(CssClassNames.CommentSection)[0];
             let title = document.createElement("h3");
             title.id = CssIds.CommentTitle;
@@ -105,12 +115,13 @@ var InjectedMain;
             comments.id = CssIds.CommentSection;
             commentDoc.appendChild(comments);
             Comment.CommentsArray = [];
+            let json = JSON.parse(e.detail);
             json.forEach(function (commentInfo) {
                 let replyTo = null;
                 if (commentInfo.ReplyTo !== null) {
                     replyTo = parseInt(commentInfo.ReplyTo);
                 }
-                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, commentInfo.UserId, commentInfo.Text, commentInfo.Time, replyTo).Build();
+                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, parseInt(commentInfo.UserId), commentInfo.Text, commentInfo.Time, replyTo).Build();
                 if (comment !== null) {
                     comments.appendChild(comment);
                 }

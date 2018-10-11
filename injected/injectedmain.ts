@@ -87,6 +87,26 @@ namespace InjectedMain {
 
     }
 
+    class CommentInfo {
+        public readonly Id: string;
+        public readonly ConversationId: string;
+        public readonly Name: string;
+        public readonly UserId: string;
+        public readonly Text: string;
+        public readonly Time: string;
+        public readonly ReplyTo: string | null;
+
+        constructor(id: string, conversationId: string, name: string, userId: string, text: string, time: string, replyTo: string | null) {
+            this.Id = id;
+            this.ConversationId = conversationId;
+            this.Name = name;
+            this.UserId = userId;
+            this.Text = text;
+            this.Time = time;
+            this.ReplyTo = replyTo;
+        }
+    }
+
     class Comments {
         public static Initialize(): void {
             document.documentElement.addEventListener("commentsgotten", Comments.OnCommentsGotten, false);
@@ -123,8 +143,6 @@ namespace InjectedMain {
         }
 
         public static OnCommentsGotten(e: any) {
-            let json: any = JSON.parse(e.detail);
-
             let commentDoc: Element = document.getElementsByClassName(CssClassNames.CommentSection)[0];
             let title: HTMLElement = document.createElement("h3");
             title.id = CssIds.CommentTitle;
@@ -139,13 +157,14 @@ namespace InjectedMain {
 
             Comment.CommentsArray = [];
 
-            json.forEach(function (commentInfo: any) {
+            let json: any = JSON.parse(e.detail);
+            json.forEach(function (commentInfo: CommentInfo) {
                 let replyTo: number | null = null;
                 if (commentInfo.ReplyTo !== null) {
                     replyTo = parseInt(commentInfo.ReplyTo);
                 }
 
-                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, commentInfo.UserId, commentInfo.Text, commentInfo.Time, replyTo).Build();
+                let comment = new Comment(parseInt(commentInfo.Id), parseInt(commentInfo.ConversationId), commentInfo.Name, parseInt(commentInfo.UserId), commentInfo.Text, commentInfo.Time, replyTo).Build();
 
                 if (comment !== null) {
                     comments.appendChild(comment);
