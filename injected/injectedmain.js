@@ -4,16 +4,21 @@ var InjectedMain;
     function Main() {
         CommentHeightFixer.Initialize();
         ConversationChangeObserver.Initialize();
+        Comments.Initialize();
+        console.log("UD- Starting...");
     }
     class CssClassNames {
     }
     CssClassNames.CommentHeightDivParent = "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r";
     CssClassNames.ActiveConversation = "IWI4RYB-d-r IWI4RYB-d-G IWI4RYB-d-O IWI4RYB-d-f IWI4RYB-b-c IWI4RYB-b-l IWI4RYB-d-k IWI4RYB-b-k";
+    CssClassNames.CommentSection = "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-b-e do-select IWI4RYB-d-t";
     CssClassNames.CommentWrapper = "commentmargin";
     CssClassNames.CommentName = "gwt-InlineHTML IWI4RYB-b-b IWI4RYB-b-o green";
     CssClassNames.CommentText = "gwt-HTML IWI4RYB-b-G";
     CssClassNames.CommentReplyDeleteWrapper = "IWI4RYB-d-r IWI4RYB-d-G IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f";
     CssClassNames.CommentReply = "gwt-HTML IWI4RYB-b-F IWI4RYB-b-o";
+    CssClassNames.CommentTimeWrapper = "IWI4RYB-b-g IWI4RYB-b-h";
+    CssClassNames.CommentTime = "gwt-HTML";
     class CssIds {
     }
     CssIds.CommentTitle = "ud--commenttitle";
@@ -41,12 +46,12 @@ var InjectedMain;
     CommentHeightFixer.Height = 0;
     class ConversationChangeObserver {
         static Initialize() {
-            setTimeout(ConversationChangeObserver.Observe, ConversationChangeObserver.UpdateRate);
+            setInterval(ConversationChangeObserver.Observe, ConversationChangeObserver.UpdateRate);
         }
         static Observe() {
             if (document.getElementsByClassName(CssClassNames.ActiveConversation).length !== 0) {
                 // @ts-ignore
-                let activeConversationId = document.getElementsByClassName(CssClassNames.ActiveConversationClass)[0].__listener.j.k;
+                let activeConversationId = document.getElementsByClassName(CssClassNames.ActiveConversation)[0].__listener.j.k;
                 if (ConversationChangeObserver.ConversationId === 0 || activeConversationId !== ConversationChangeObserver.ConversationId) {
                     ConversationChangeObserver.ConversationId = activeConversationId;
                     ConversationChangeObserver.OnConversationChanged(ConversationChangeObserver.ConversationId);
@@ -62,6 +67,9 @@ var InjectedMain;
     ConversationChangeObserver.UpdateRate = 100;
     ConversationChangeObserver.ConversationId = 0;
     class Comments {
+        static Initialize() {
+            document.documentElement.addEventListener("commentsgotten", Comments.OnCommentsGotten, false);
+        }
         static RemoveComments() {
             let abortCommentRequestEvent = new CustomEvent('abortcommentrequests');
             document.documentElement.dispatchEvent(abortCommentRequestEvent);
@@ -86,20 +94,63 @@ var InjectedMain;
             let getCommentsEvent = new CustomEvent('getcomments', { detail: conversationId });
             document.documentElement.dispatchEvent(getCommentsEvent);
         }
+        static OnCommentsGotten(e) {
+            let json = JSON.parse(e.detail);
+            let commentDoc = document.getElementsByClassName(CssClassNames.CommentSection)[0];
+            let comments = document.createElement("div");
+            comments.id = "ud--commentsection";
+            commentDoc.appendChild(comments);
+            json.forEach(function (comment) {
+                comments.appendChild(new Comment(comment.Id, comment.ConversationId, comment.Name, comment.UserId, comment.Text, comment.Time).Build());
+            });
+        }
     }
     class Comment {
-        constructor(id, name, userId, text) {
+        constructor(id, conversationId, name, userId, text, time) {
             this.Id = id;
+            this.ConversationId = conversationId;
             this.Name = name;
             this.UserId = userId;
             this.Text = text;
+            this.Time = time;
         }
-        static CreateCommentWrapper() {
+        Build() {
+            let commentWrapper = this.CreateCommentWrapper();
+            let commentNameTextWrapper = this.CreateCommentNameTextWrapper();
+            let commentName = this.CreateCommentName();
+            this.CreateUserInfo(commentName);
+            let contentWrapper = this.CreateContentWrapper();
+            this.CreateCommentImage(contentWrapper);
+            this.CreateCommentVideo(contentWrapper);
+            let commentText = this.CreateCommentText();
+            let commentReplyDeleteTimeWrapper = this.CreateCommentReplyDeleteTimeWrapper();
+            let commentReply = this.CreateCommentReply(commentWrapper);
+            let commentDelete = this.CreateCommentDelete();
+            let commentTimeWrapper = this.CreateCommentTimeWrapper();
+            let commentTime = this.CreateCommentTime();
+            commentWrapper.appendChild(commentNameTextWrapper);
+            commentNameTextWrapper.appendChild(commentName);
+            commentWrapper.appendChild(contentWrapper);
+            contentWrapper.appendChild(commentNameTextWrapper);
+            commentNameTextWrapper.appendChild(commentText);
+            commentWrapper.appendChild(commentReplyDeleteTimeWrapper);
+            if (this.UserId !== 0) {
+                commentReplyDeleteTimeWrapper.appendChild(commentReply);
+            }
+            // @ts-ignore
+            if (this.UserId === uddata_bruger.brug_id) {
+                commentReplyDeleteTimeWrapper.appendChild(commentDelete);
+            }
+            commentReplyDeleteTimeWrapper.appendChild(commentTimeWrapper);
+            commentTimeWrapper.appendChild(commentTime);
+            return commentWrapper;
+        }
+        CreateCommentWrapper() {
             let commentWrapper = document.createElement("div");
             commentWrapper.className = CssClassNames.CommentWrapper;
             return commentWrapper;
         }
-        static CreateCommentNameTextWrapper() {
+        CreateCommentNameTextWrapper() {
             let commentNameTextWrapper = document.createElement("div");
             return commentNameTextWrapper;
         }
@@ -223,10 +274,54 @@ var InjectedMain;
             commentReplyDeleteTimeWrapper.className = CssClassNames.CommentReplyDeleteWrapper;
             return commentReplyDeleteTimeWrapper;
         }
-        CreateCommentReply() {
+        CreateCommentReply(commentWrapper) {
             let commentReply = document.createElement("div");
             commentReply.className = CssClassNames.CommentReply;
             commentReply.style.display = "inline-block";
+            commentReply.innerText = "Svar";
+            let commentReplyEvent = new CustomEvent("commentreply", {
+                detail: {
+                    conversationId: this.ConversationId,
+                    commentId: this.Id,
+                    commentDiv: commentWrapper
+                }
+            });
+            commentReply.addEventListener("click", function () {
+                document.documentElement.dispatchEvent(commentReplyEvent);
+            });
+            return commentReply;
+        }
+        CreateCommentDelete() {
+            let commentDelete = document.createElement("div");
+            commentDelete.className = CssClassNames.CommentReply;
+            commentDelete.style.display = "inline-block";
+            commentDelete.style.marginLeft = "5px";
+            commentDelete.innerText = "Slet";
+            let commentDeleteEvent = new CustomEvent("deletecomment", {
+                detail: {
+                    conversationId: this.ConversationId,
+                    userId: this.UserId,
+                    id: this.Id
+                }
+            });
+            commentDelete.addEventListener("click", function () {
+                if (confirm("Er du sikker på at du vil slette denne kommentar?")) {
+                    document.documentElement.dispatchEvent(commentDeleteEvent);
+                }
+            });
+            return commentDelete;
+        }
+        CreateCommentTimeWrapper() {
+            let commentTimeWrapper = document.createElement("div");
+            commentTimeWrapper.className = CssClassNames.CommentTimeWrapper;
+            commentTimeWrapper.style.display = "inline-block";
+            return commentTimeWrapper;
+        }
+        CreateCommentTime() {
+            let commentTime = document.createElement("div");
+            commentTime.className = CssClassNames.CommentTime;
+            commentTime.innerText = this.Time;
+            return commentTime;
         }
     }
     Main();

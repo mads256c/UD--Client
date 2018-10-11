@@ -19,7 +19,7 @@ var ExtensionMain;
             //Create a html script element.
             let s = document.createElement("script");
             // @ts-ignore
-            s.src = chrome.extension.getURL("injected/main.js"); //Set the src to our code.
+            s.src = chrome.extension.getURL("injected/injectedmain.js"); //Set the src to our code.
             document.head.appendChild(s); //Add the element to the document.
         }
     }
@@ -34,10 +34,6 @@ var ExtensionMain;
             document.documentElement.addEventListener("deletecomment", Events.OnDeleteComment, false);
         }
         ;
-        static OnGetCommentsLoad() {
-            let event = new CustomEvent("commentsgotten", { detail: Events.GetCommentsRequest.responseText });
-            document.documentElement.dispatchEvent(event);
-        }
         static OnAbortCommentRequests() {
             if (Events.GetCommentsRequest !== undefined) {
                 Events.GetCommentsRequest.abort();
@@ -50,11 +46,17 @@ var ExtensionMain;
             }
         }
         static OnGetComments(e) {
+            console.log("getting comments");
             Events.GetCommentsRequest = new XMLHttpRequest();
             Events.GetCommentsRequest.addEventListener("load", Events.OnGetCommentsLoad, false);
             Events.GetCommentsRequest.addEventListener("error", Events.OnGetCommentsError, false);
             Events.GetCommentsRequest.open("GET", Configuration.Url + "getcomments.php?conversationId=" + e.detail, true);
             Events.GetCommentsRequest.send();
+        }
+        static OnGetCommentsLoad() {
+            console.log("got comments");
+            let event = new CustomEvent("commentsgotten", { detail: Events.GetCommentsRequest.responseText });
+            document.documentElement.dispatchEvent(event);
         }
         static OnGetCommentsError() {
             let event = new CustomEvent("messageshow", {

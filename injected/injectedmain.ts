@@ -3,12 +3,16 @@ namespace InjectedMain {
     function Main(): void {
         CommentHeightFixer.Initialize();
         ConversationChangeObserver.Initialize();
+        Comments.Initialize();
+        console.log("UD- Starting...");
     }
 
     class CssClassNames {
         public static readonly CommentHeightDivParent: string = "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-d-t IWI4RYB-b-r";
 
         public static readonly ActiveConversation: string = "IWI4RYB-d-r IWI4RYB-d-G IWI4RYB-d-O IWI4RYB-d-f IWI4RYB-b-c IWI4RYB-b-l IWI4RYB-d-k IWI4RYB-b-k";
+
+        public static readonly CommentSection: string = "IWI4RYB-d-r IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f IWI4RYB-b-e do-select IWI4RYB-d-t";
 
         public static readonly CommentWrapper: string = "commentmargin";
 
@@ -19,6 +23,10 @@ namespace InjectedMain {
         public static readonly CommentReplyDeleteWrapper: string = "IWI4RYB-d-r IWI4RYB-d-G IWI4RYB-d-O IWI4RYB-d-k IWI4RYB-d-f";
 
         public static readonly CommentReply: string = "gwt-HTML IWI4RYB-b-F IWI4RYB-b-o";
+
+        public static readonly CommentTimeWrapper: string = "IWI4RYB-b-g IWI4RYB-b-h";
+
+        public static readonly CommentTime: string = "gwt-HTML";
     }
 
     class CssIds {
@@ -56,13 +64,13 @@ namespace InjectedMain {
         private static ConversationId: number = 0;
 
         public static Initialize(): void {
-            setTimeout(ConversationChangeObserver.Observe, ConversationChangeObserver.UpdateRate);
+            setInterval(ConversationChangeObserver.Observe, ConversationChangeObserver.UpdateRate);
         }
 
         private static Observe(): void {
             if (document.getElementsByClassName(CssClassNames.ActiveConversation).length !== 0) {
                 // @ts-ignore
-                let activeConversationId = document.getElementsByClassName(CssClassNames.ActiveConversationClass)[0].__listener.j.k;
+                let activeConversationId = document.getElementsByClassName(CssClassNames.ActiveConversation)[0].__listener.j.k;
                 if (ConversationChangeObserver.ConversationId === 0 || activeConversationId !== ConversationChangeObserver.ConversationId) {
                     ConversationChangeObserver.ConversationId = activeConversationId;
                     ConversationChangeObserver.OnConversationChanged(ConversationChangeObserver.ConversationId);
@@ -80,6 +88,10 @@ namespace InjectedMain {
     }
 
     class Comments {
+        public static Initialize():void {
+            document.documentElement.addEventListener("commentsgotten", Comments.OnCommentsGotten, false);
+        }
+
         public static RemoveComments(): void {
             let abortCommentRequestEvent: CustomEvent = new CustomEvent('abortcommentrequests');
             document.documentElement.dispatchEvent(abortCommentRequestEvent);
@@ -109,31 +121,88 @@ namespace InjectedMain {
             let getCommentsEvent: CustomEvent = new CustomEvent('getcomments', {detail: conversationId});
             document.documentElement.dispatchEvent(getCommentsEvent);
         }
+
+        public static OnCommentsGotten(e:any){
+            let json:any = JSON.parse(e.detail);
+
+            let commentDoc:HTMLElement = document.getElementsByClassName(CssClassNames.CommentSection)[0];
+
+            let comments:HTMLElement = document.createElement("div");
+            comments.id = "ud--commentsection";
+
+            commentDoc.appendChild(comments);
+
+            json.forEach(function(comment:any){
+                comments.appendChild(new Comment(comment.Id, comment.ConversationId, comment.Name, comment.UserId, comment.Text, comment.Time).Build());
+            });
+        }
     }
 
     class Comment {
 
-        private Id: number;
-        private Name: string;
-        private UserId: number;
+        private readonly Id: number;
+        private readonly ConversationId: number;
+        private readonly Name: string;
+        private readonly UserId: number;
         private Text: string;
+        private readonly Time: string;
 
 
-        constructor(id: number, name: string, userId: number, text: string) {
+        constructor(id: number, conversationId: number, name: string, userId: number, text: string, time: string) {
             this.Id = id;
+            this.ConversationId = conversationId;
             this.Name = name;
             this.UserId = userId;
             this.Text = text;
+            this.Time = time;
         }
 
-        private static CreateCommentWrapper(): HTMLElement {
+        public Build(): HTMLElement {
+            let commentWrapper: HTMLElement = this.CreateCommentWrapper();
+            let commentNameTextWrapper: HTMLElement = this.CreateCommentNameTextWrapper();
+            let commentName: HTMLElement = this.CreateCommentName();
+            this.CreateUserInfo(commentName);
+            let contentWrapper: HTMLElement = this.CreateContentWrapper();
+            this.CreateCommentImage(contentWrapper);
+            this.CreateCommentVideo(contentWrapper);
+            let commentText: HTMLElement = this.CreateCommentText();
+            let commentReplyDeleteTimeWrapper: HTMLElement = this.CreateCommentReplyDeleteTimeWrapper();
+            let commentReply: HTMLElement = this.CreateCommentReply(commentWrapper);
+            let commentDelete: HTMLElement = this.CreateCommentDelete();
+            let commentTimeWrapper: HTMLElement = this.CreateCommentTimeWrapper();
+            let commentTime: HTMLElement = this.CreateCommentTime();
+
+            commentWrapper.appendChild(commentNameTextWrapper);
+            commentNameTextWrapper.appendChild(commentName);
+            commentWrapper.appendChild(contentWrapper);
+            contentWrapper.appendChild(commentNameTextWrapper);
+            commentNameTextWrapper.appendChild(commentText);
+            commentWrapper.appendChild(commentReplyDeleteTimeWrapper);
+
+            if (this.UserId !== 0) {
+                commentReplyDeleteTimeWrapper.appendChild(commentReply);
+            }
+
+            // @ts-ignore
+            if (this.UserId === uddata_bruger.brug_id) {
+                commentReplyDeleteTimeWrapper.appendChild(commentDelete);
+            }
+
+            commentReplyDeleteTimeWrapper.appendChild(commentTimeWrapper);
+            commentTimeWrapper.appendChild(commentTime);
+
+
+            return commentWrapper;
+        }
+
+        private CreateCommentWrapper(): HTMLElement {
             let commentWrapper: HTMLElement | null = document.createElement("div");
             commentWrapper.className = CssClassNames.CommentWrapper;
 
             return commentWrapper;
         }
 
-        private static CreateCommentNameTextWrapper(): HTMLElement {
+        private CreateCommentNameTextWrapper(): HTMLElement {
             let commentNameTextWrapper: HTMLElement | null = document.createElement("div");
 
             return commentNameTextWrapper;
@@ -297,16 +366,69 @@ namespace InjectedMain {
         }
 
         private CreateCommentReplyDeleteTimeWrapper(): HTMLElement {
-            let commentReplyDeleteTimeWrapper:HTMLElement|null = document.createElement("div");
+            let commentReplyDeleteTimeWrapper: HTMLElement | null = document.createElement("div");
             commentReplyDeleteTimeWrapper.className = CssClassNames.CommentReplyDeleteWrapper;
 
             return commentReplyDeleteTimeWrapper;
         }
 
-        private CreateCommentReply(): HTMLElement {
-            let commentReply:HTMLElement|null = document.createElement("div");
+        private CreateCommentReply(commentWrapper: HTMLElement): HTMLElement {
+            let commentReply: HTMLElement | null = document.createElement("div");
             commentReply.className = CssClassNames.CommentReply;
             commentReply.style.display = "inline-block";
+            commentReply.innerText = "Svar";
+
+            let commentReplyEvent: CustomEvent = new CustomEvent("commentreply", {
+                detail: {
+                    conversationId: this.ConversationId,
+                    commentId: this.Id,
+                    commentDiv: commentWrapper
+                }
+            });
+            commentReply.addEventListener("click", function () {
+                document.documentElement.dispatchEvent(commentReplyEvent);
+            });
+
+            return commentReply;
+        }
+
+        private CreateCommentDelete(): HTMLElement {
+            let commentDelete: HTMLElement | null = document.createElement("div");
+            commentDelete.className = CssClassNames.CommentReply;
+            commentDelete.style.display = "inline-block";
+            commentDelete.style.marginLeft = "5px";
+            commentDelete.innerText = "Slet";
+
+            let commentDeleteEvent: CustomEvent = new CustomEvent("deletecomment", {
+                detail: {
+                    conversationId: this.ConversationId,
+                    userId: this.UserId,
+                    id: this.Id
+                }
+            });
+            commentDelete.addEventListener("click", function () {
+                if (confirm("Er du sikker på at du vil slette denne kommentar?")) {
+                    document.documentElement.dispatchEvent(commentDeleteEvent)
+                }
+            });
+
+            return commentDelete;
+        }
+
+        private CreateCommentTimeWrapper(): HTMLElement {
+            let commentTimeWrapper: HTMLElement = document.createElement("div");
+            commentTimeWrapper.className = CssClassNames.CommentTimeWrapper;
+            commentTimeWrapper.style.display = "inline-block";
+
+            return commentTimeWrapper;
+        }
+
+        private CreateCommentTime(): HTMLElement {
+            let commentTime: HTMLElement = document.createElement("div");
+            commentTime.className = CssClassNames.CommentTime;
+            commentTime.innerText = this.Time;
+
+            return commentTime;
         }
 
     }

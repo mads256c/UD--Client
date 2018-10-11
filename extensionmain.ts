@@ -21,7 +21,7 @@ namespace ExtensionMain {
             //Create a html script element.
             let s = document.createElement("script");
             // @ts-ignore
-            s.src = chrome.extension.getURL("injected/main.js"); //Set the src to our code.
+            s.src = chrome.extension.getURL("injected/injectedmain.js"); //Set the src to our code.
             document.head.appendChild(s); //Add the element to the document.
         }
     }
@@ -44,10 +44,6 @@ namespace ExtensionMain {
             document.documentElement.addEventListener("deletecomment", Events.OnDeleteComment, false);
         };
 
-        public static OnGetCommentsLoad(): void {
-            let event: CustomEvent = new CustomEvent("commentsgotten", {detail: Events.GetCommentsRequest.responseText});
-            document.documentElement.dispatchEvent(event);
-        }
 
         private static OnAbortCommentRequests(): void {
             if (Events.GetCommentsRequest !== undefined) {
@@ -64,12 +60,19 @@ namespace ExtensionMain {
         }
 
         private static OnGetComments(e: CustomEvent): void {
+            console.log("getting comments");
             Events.GetCommentsRequest = new XMLHttpRequest();
             Events.GetCommentsRequest.addEventListener("load", Events.OnGetCommentsLoad, false);
             Events.GetCommentsRequest.addEventListener("error", Events.OnGetCommentsError, false);
 
             Events.GetCommentsRequest.open("GET", Configuration.Url + "getcomments.php?conversationId=" + e.detail, true);
             Events.GetCommentsRequest.send();
+        }
+
+        private static OnGetCommentsLoad(): void {
+            console.log("got comments");
+            let event: CustomEvent = new CustomEvent("commentsgotten", {detail: Events.GetCommentsRequest.responseText});
+            document.documentElement.dispatchEvent(event);
         }
 
         private static OnGetCommentsError(): void {
